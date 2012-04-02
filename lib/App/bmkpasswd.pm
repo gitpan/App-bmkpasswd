@@ -1,16 +1,14 @@
 package App::bmkpasswd;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use strict;
 use warnings;
-
-use Carp;
 
 use Crypt::Eksblowfish::Bcrypt qw/bcrypt en_base64/;
 
 require Exporter;
 our @ISA = qw/Exporter/;
-our @EXPORT = qw/
+our @EXPORT_OK = qw/
   mkpasswd
   passwdcmp
 /;
@@ -40,7 +38,7 @@ sub mkpasswd {
     # Not sure of other libcs with support.
     # Ulrich Drepper's been evangelizing a bit . . .
     if ($type =~ /sha-?512/i) {
-      croak "SHA hash requested but no SHA support available\n" 
+      die "SHA hash requested but no SHA support available\n" 
         unless have_sha(512);
       # SHA has variable length salts (max 16)
       # Drepper claims this can slow down attacks.
@@ -51,7 +49,7 @@ sub mkpasswd {
     }
     
     if ($type =~ /sha(-?256)?/i) {
-      croak "SHA hash requested but no SHA support available" 
+      die "SHA hash requested but no SHA support available\n" 
         unless have_sha(256);
       $salt .= $p[rand@p] for 1 .. rand 8;
       $salt = '$5$'.$salt.'$';
@@ -72,7 +70,7 @@ sub mkpasswd {
     if ( eval { require Crypt::Passwd::XS } && !$@) {
       return Crypt::Passwd::XS::crypt($pwd, $salt);
     } else {
-      croak '$HAVE_PASSWD_XS=1 but Crypt::Passwd::XS not loadable';
+      die "\$HAVE_PASSWD_XS=1 but Crypt::Passwd::XS not loadable\n";
     }
   } else {
     return crypt($pwd, $salt);  
@@ -177,7 +175,7 @@ Salts are randomly generated.
 You can use the exported B<mkpasswd> and B<passwdcmp> functions in 
 other Perl modules/applications:
 
-  use App::bmkpasswd;
+  use App::bmkpasswd qw/mkpasswd passwdcmp/;
   ## Generate a bcrypted passwd with work-cost 08:
   $bcrypted = mkpasswd($passwd);
   ## Generate a bcrypted passwd with other work-cost:
