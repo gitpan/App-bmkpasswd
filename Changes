@@ -1,5 +1,11 @@
 Revision history for App::bmkpasswd
 
+1.01 2012-06-08
+
+  - Use Try::Tiny rather than raw block eval
+  - Use strictures
+  - Improved tests
+
 1.00 2012-05-23
 
   - Minor cleanups, 1.00
