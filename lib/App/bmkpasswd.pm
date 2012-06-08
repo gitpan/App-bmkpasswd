@@ -1,5 +1,5 @@
 package App::bmkpasswd;
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 use strictures 1;
 
@@ -31,14 +31,18 @@ sub mkpasswd {
   TYPE: {
     if ($type =~ /^bcrypt$/i) {
       $cost = '08' unless $cost;
+
+      croak "Work cost factor must be numeric"
+        unless $cost =~ /^[0-9]+$/;
+
       $cost = '0$cost' if length $cost == 1;
       $salt = en_base64( join '', map { chr int rand 256 } 1 .. 16 );
       my $bsettings = join '', '$2a$', $cost, '$', $salt;
+
       return bcrypt($pwd, $bsettings)
     }
 
-    # SHA requires Crypt::Passwd::XS or glibc2.7+
-    # Not sure of other libcs with support.
+    # SHA requires Crypt::Passwd::XS or glibc2.7+, recent fBSD etc
     # Ulrich Drepper's been evangelizing a bit . . .
     if ($type =~ /sha-?512/i) {
       croak "SHA hash requested but no SHA support available" 
@@ -64,20 +68,12 @@ sub mkpasswd {
       last TYPE
     }
 
-    return
+    croak "Unknown type specified: $type"
   }
 
-  ## have_sha() will set our package HAVE_PASSWD_XS:
-  if ($HAVE_PASSWD_XS) {
-    ## ...but make sure the user isn't doing something dumb:
-    try {
-      require Crypt::Passwd::XS
-    } catch {
-      croak "\$HAVE_PASSWD_XS=1 but Crypt::Passwd::XS is not loadable"
-    };
-
-    return Crypt::Passwd::XS::crypt($pwd, $salt)
-  }
+  ## have_sha() called above will set our package HAVE_PASSWD_XS:
+  return Crypt::Passwd::XS::crypt($pwd, $salt)
+    if $HAVE_PASSWD_XS;
 
   return crypt($pwd, $salt)
 }
