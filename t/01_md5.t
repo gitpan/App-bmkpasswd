@@ -1,8 +1,10 @@
 use Test::More tests => 5;
+use strict; use warnings;
 
 BEGIN {
   use_ok( 'App::bmkpasswd', qw/mkpasswd passwdcmp/ );
 }
+
 
 SKIP: {
   App::bmkpasswd::have_passwd_xs();

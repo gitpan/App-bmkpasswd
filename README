@@ -31,9 +31,7 @@ DESCRIPTION
 
     See "bmkpasswd --help" for usage information.
 
-    Uses Crypt::Random::Seed to generate random salts. This means that
-    systems with low entropy may block on mkpasswd (try
-    <http://www.issihosts.com/haveged/>).
+    Uses Crypt::Random::Seed to generate random salts.
 
     Uses Crypt::Eksblowfish::Bcrypt for bcrypted passwords. Bcrypt hashes
     come with a configurable work-cost factor; that allows hash generation
@@ -69,6 +67,10 @@ EXPORTED
       ## SHA:
       $crypted = mkpasswd($passwd, 'sha256');
       $crypted = mkpasswd($passwd, 'sha512');
+
+      ## Use a strong random source (requires spare entropy):
+      $crypted = mkpasswd($passwd, 'bcrypt', '08', 1);
+      $crypted = mkpasswd($passwd, 'sha512', '', 1);
 
   passwdcmp
       ## Compare a password against a hash

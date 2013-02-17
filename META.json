@@ -36,9 +36,9 @@
             "Crypt::Random::Seed" : "0.03",
             "Exporter" : "0",
             "Getopt::Long" : "2.24",
-            "Term::ReadKey" : "0",
+            "Term::ReadKey" : "2.30",
             "Time::HiRes" : "0",
-            "Try::Tiny" : "0",
+            "Try::Tiny" : "0.12",
             "perl" : "v5.8.5",
             "strictures" : "1"
          }
@@ -57,6 +57,6 @@
          "web" : "https://github.com/avenj/app-bmkpasswd"
       }
    },
-   "version" : "1.081002"
+   "version" : "1.082000"
 }
 

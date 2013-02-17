@@ -29,12 +29,12 @@ my %WriteMakefileArgs = (
     "Crypt::Random::Seed" => "0.03",
     "Exporter" => 0,
     "Getopt::Long" => "2.24",
-    "Term::ReadKey" => 0,
+    "Term::ReadKey" => "2.30",
     "Time::HiRes" => 0,
-    "Try::Tiny" => 0,
+    "Try::Tiny" => "0.12",
     "strictures" => 1
   },
-  "VERSION" => "1.081002",
+  "VERSION" => "1.082000",
   "test" => {
     "TESTS" => "t/*.t"
   }
