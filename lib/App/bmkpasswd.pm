@@ -1,53 +1,105 @@
 package App::bmkpasswd;
-our $VERSION = '1.07';
-
+{
+  $App::bmkpasswd::VERSION = '1.081001';
+}
 use strictures 1;
-
 use Carp;
-
 use Try::Tiny;
 
-use Crypt::Eksblowfish::Bcrypt qw/bcrypt en_base64/;
+use Crypt::Eksblowfish::Bcrypt qw/
+  bcrypt 
+  en_base64
+/;
 
-require Exporter;
-our @ISA = qw/Exporter/;
+use Crypt::Random::Seed;
+my $crs = Crypt::Random::Seed->new;
+
+use Exporter 'import';
 our @EXPORT_OK = qw/
   mkpasswd
   passwdcmp
 /;
 
-our $HAVE_PASSWD_XS;
-
+my %_can_haz;
 sub have_passwd_xs {
-  $HAVE_PASSWD_XS = 0;
+  unless (defined $_can_haz{passwdxs}) {
+    try { require Crypt::Passwd::XS;  $_can_haz{passwdxs} = 1 } 
+     catch { $_can_haz{passwdxs} = 0 };
+   }
+  $_can_haz{passwdxs}
+}
 
-  try {
-    require Crypt::Passwd::XS;
-    $HAVE_PASSWD_XS = 1
-  };
-  
-  return $HAVE_PASSWD_XS
+sub have_sha {
+  ## if we have Crypt::Passwd::XS, just use that:
+  return 1 if have_passwd_xs();
+
+  my ($rate) = @_;
+  $rate = 512 unless $rate;
+  my $type = 'sha' . $rate;
+  return $_can_haz{$type} if defined $_can_haz{$type};
+
+  ## determine (the slow way) if SHA256/512 are available
+  ## requires glibc2.7+ or Crypt::Passwd::XS
+  my %tests = (
+    sha256 => sub {
+      my $testcrypt = crypt('a', '$5$abc$');
+      return unless index($testcrypt, '$5$abc$') == 0;
+      1
+    },
+
+    sha512 => sub {
+      my $testcrypt = crypt('b', '$6$abc$');
+      return unless index($testcrypt, '$6$abc$') == 0;
+      1
+    },
+  );
+
+  if (defined $tests{$type} && $tests{$type}->()) {
+    return $_can_haz{$type} = 1
+  }
+
+  $_can_haz{$type} = 0
+}
+
+
+sub _saltgen {
+  my ($type) = @_;
+
+  SALT: {
+    if ($type eq 'bcrypt') {
+      return en_base64( $crs->random_bytes(16) );
+    }
+
+    if ($type eq 'sha') {
+      my $max = en_base64( $crs->random_bytes(16) );
+      my $initial = substr $max, 0, 8, '';
+      $initial .= substr $max, 0, 1, '' for  1 .. rand 8;
+      return $initial
+    }
+
+    if ($type eq 'md5') {
+      return en_base64( $crs->random_bytes(6) );
+    }
+  }
+
+  confess "_saltgen fell through, unknown type $type"
 }
 
 sub mkpasswd {
   my ($pwd, $type, $cost) = @_;
-  
+
   $type = 'bcrypt' unless $type;
-  
-  # a default (randomized) salt
-  # can be used for md5 or built on for SHA
-  my @chrs = ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9, '.', '/' );
-  my $salt = join '', map { $chrs[rand @chrs] } 1 .. 8;
-  
+  my $salt;
+
   TYPE: {
     if ($type =~ /^bcrypt$/i) {
       $cost = '08' unless $cost;
 
       croak "Work cost factor must be numeric"
         unless $cost =~ /^[0-9]+$/;
-
       $cost = '0$cost' if length $cost == 1;
-      $salt = en_base64( join '', map { chr int rand 256 } 1 .. 16 );
+
+      $salt = _saltgen('bcrypt');
       my $bsettings = join '', '$2a$', $cost, '$', $salt;
 
       return bcrypt($pwd, $bsettings)
@@ -57,24 +109,19 @@ sub mkpasswd {
     if ($type =~ /sha-?512/i) {
       croak "SHA hash requested but no SHA support available" 
         unless have_sha(512);
-      # SHA has variable length salts (max 16)
-      # Drepper claims this can slow down attacks.
-      # ...I'm under-convinced, but there you are:
-      $salt .= $chrs[rand @chrs] for 1 .. rand 8;
-      $salt = '$6$'.$salt.'$';
+      $salt = join '', '$6$', _saltgen('sha'), '$';
       last TYPE
     }
-    
+
     if ($type =~ /sha(-?256)?/i) {
       croak "SHA hash requested but no SHA support available" 
         unless have_sha(256);
-      $salt .= $chrs[rand @chrs] for 1 .. rand 8;
-      $salt = '$5$'.$salt.'$';
+      $salt = join '', '$5$', _saltgen('sha'), '$';
       last TYPE
     }
-    
+
     if ($type =~ /^md5$/i) {
-      $salt = '$1$'.$salt.'$';
+      $salt = join '', '$1$', _saltgen('md5'), '$';
       last TYPE
     }
 
@@ -90,11 +137,12 @@ sub mkpasswd {
 sub passwdcmp {
   my ($pwd, $crypt) = @_;
   return unless defined $pwd and $crypt;
-  
+
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
     ## Looks like bcrypt.
     return $crypt if $crypt eq bcrypt($pwd, $crypt)
   } else {
+
     if ( have_passwd_xs() ) {
       return $crypt
         if $crypt eq Crypt::Passwd::XS::crypt($pwd, $crypt)
@@ -102,35 +150,10 @@ sub passwdcmp {
       return $crypt
         if $crypt eq crypt($pwd, $crypt)
     }
+
   }
 
   return
-}
-
-sub have_sha {
-  ## if we have Crypt::Passwd::XS, just use that:
-  return 1 if have_passwd_xs();
-
-  my ($rate) = @_;
-  $rate = 512 unless $rate;
-  ## determine (the slow way) if SHA256/512 are available
-  ## requires glibc2.7+ or Crypt::Passwd::XS
-  my %tests = (
-    256 => sub {
-      my $testcrypt = crypt('a', '$5$abc$');
-      return unless index($testcrypt, '$5$abc$') == 0;
-      return 1
-    },
-  
-    512 => sub {
-      my $testcrypt = crypt('b', '$6$abc$');
-      return unless index($testcrypt, '$6$abc$') == 0;
-      return 1
-    },
-  );
-  
-  return unless defined $tests{$rate} and $tests{$rate}->();
-  return 1
 }
 
 1;
@@ -144,6 +167,11 @@ App::bmkpasswd - bcrypt-capable mkpasswd(1) and exported helpers
 
 =head1 SYNOPSIS
 
+  ## From Perl:
+  use App::bmkpasswd 'mkpasswd';
+  my $bcrypted = mkpasswd($passwd);
+
+  ## From a shell:
   bmkpasswd --help
   
   ## Generate bcrypted passwords
@@ -168,6 +196,10 @@ B<App::bmkpasswd> is a simple bcrypt-enabled mkpasswd. (Helper functions
 are also exported for use in other applications; see L</EXPORTED>.)
 
 See C<bmkpasswd --help> for usage information.
+
+Uses L<Crypt::Random::Seed> to generate random salts.
+This means that systems with low entropy may block on B<mkpasswd> 
+(try L<http://www.issihosts.com/haveged/>).
 
 Uses L<Crypt::Eksblowfish::Bcrypt> for bcrypted passwords. Bcrypt hashes 
 come with a configurable work-cost factor; that allows hash generation 
@@ -194,6 +226,8 @@ other Perl modules/applications:
 
   use App::bmkpasswd qw/mkpasswd passwdcmp/;
 
+=head2 mkpasswd
+
   ## Generate a bcrypted passwd with work-cost 08:
   $bcrypted = mkpasswd($passwd);
 
@@ -203,6 +237,8 @@ other Perl modules/applications:
   ## SHA:
   $crypted = mkpasswd($passwd, 'sha256');
   $crypted = mkpasswd($passwd, 'sha512');
+
+=head2 passwdcmp
 
   ## Compare a password against a hash
   ## passwdcmp() will return the hash if it is a match
@@ -222,5 +258,7 @@ patches welcome? ;-)
 =head1 AUTHOR
 
 Jon Portnoy <avenj@cobaltirc.org>
+
+=for Pod::Coverage have_(?i:[A-Z_]+)
 
 =cut
