@@ -10,13 +10,14 @@ use File::Spec::Functions;
 use List::Util qw/max/;
 
 my @modules = qw(
+  Bytes::Random::Secure
   Carp
   Crypt::Eksblowfish
   Crypt::Passwd::XS
-  Crypt::Random::Seed
   Exporter
   ExtUtils::MakeMaker
   Getopt::Long
+  Math::Random::ISAAC::XS
   Term::ReadKey
   Test::More
   Time::HiRes

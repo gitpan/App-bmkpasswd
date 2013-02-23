@@ -24,9 +24,9 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "App::bmkpasswd",
   "PREREQ_PM" => {
+    "Bytes::Random::Secure" => "0.24",
     "Carp" => 0,
     "Crypt::Eksblowfish" => "0.003",
-    "Crypt::Random::Seed" => "0.03",
     "Exporter" => 0,
     "Getopt::Long" => "2.24",
     "Term::ReadKey" => "2.30",
@@ -34,7 +34,7 @@ my %WriteMakefileArgs = (
     "Try::Tiny" => "0.12",
     "strictures" => 1
   },
-  "VERSION" => "1.082000",
+  "VERSION" => "1.082001",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -31,7 +31,7 @@ DESCRIPTION
 
     See "bmkpasswd --help" for usage information.
 
-    Uses Crypt::Random::Seed to generate random salts.
+    Uses Bytes::Random::Secure to generate random salts.
 
     Uses Crypt::Eksblowfish::Bcrypt for bcrypted passwords. Bcrypt hashes
     come with a configurable work-cost factor; that allows hash generation
@@ -48,8 +48,6 @@ DESCRIPTION
     MD5 support is fairly universal, but it is known insecure and there is
     really no valid excuse to be using it; it is included here for
     compatibility with ancient hashes.
-
-    Salts are randomly generated.
 
 EXPORTED
     You can use the exported mkpasswd and passwdcmp functions in other Perl
