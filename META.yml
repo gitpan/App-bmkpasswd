@@ -29,4 +29,4 @@ requires:
   strictures: 1
 resources:
   repository: git://github.com/avenj/app-bmkpasswd.git
-version: 1.082001
+version: 1.082002
