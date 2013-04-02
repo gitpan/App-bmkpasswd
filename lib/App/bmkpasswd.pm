@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '1.082002';
+  $App::bmkpasswd::VERSION = '1.082003';
 }
 use strictures 1;
 use Carp;
@@ -228,10 +228,6 @@ B<SHA-256> and B<SHA-512> are supported if available. You'll need
 either L<Crypt::Passwd::XS> or a system crypt() that can handle SHA, 
 such as glibc-2.7+ or newer FreeBSD builds.
 
-B<MD5> support is fairly universal, but it is known insecure and there 
-is really no valid excuse to be using it; it is included here for 
-compatibility with ancient hashes.
-
 =head1 EXPORTED
 
 You can use the exported B<mkpasswd> and B<passwdcmp> functions in 
@@ -252,8 +248,8 @@ other Perl modules/applications:
   $crypted = mkpasswd($passwd, 'sha512');
 
   ## Use a strong random source (requires spare entropy):
-  $crypted = mkpasswd($passwd, 'bcrypt', '08', 1);
-  $crypted = mkpasswd($passwd, 'sha512', '', 1);
+  $crypted = mkpasswd($passwd, 'bcrypt', '08', 'strong');
+  $crypted = mkpasswd($passwd, 'sha512', 0, 'strong');
 
 =head2 passwdcmp
 
