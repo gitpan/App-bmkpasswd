@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '1.082003';
+  $App::bmkpasswd::VERSION = '1.082004';
 }
 use strictures 1;
 use Carp;
@@ -90,6 +90,7 @@ sub _saltgen {
     if ($type eq 'sha') {
       my $max = en_base64( $rnd->bytes(16) );
       my $initial = substr $max, 0, 8, '';
+      ## Drepper recommends random-length salts:
       $initial .= substr $max, 0, 1, '' for  1 .. rand 8;
       return $initial
     }
@@ -151,21 +152,35 @@ sub mkpasswd {
   return crypt($pwd, $salt)
 }
 
+sub _const_t_eq {
+  my ($first, $second) = @_;
+  my $unequal;
+  my $n = 0;
+  no warnings 'substr';
+  while ($n < length $first) {
+    my $schr = substr($second, $n, 1);
+    ++$unequal
+      if substr($first, $n, 1) ne (defined $schr ? $schr : '');
+    ++$n;
+  }
+  $unequal ? () : 1
+}
+
 sub passwdcmp {
   my ($pwd, $crypt) = @_;
   return unless defined $pwd and $crypt;
 
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
     ## Looks like bcrypt.
-    return $crypt if $crypt eq bcrypt($pwd, $crypt)
+    return $crypt if _const_t_eq( $crypt, bcrypt($pwd, $crypt) )
   } else {
 
     if ( have_passwd_xs() ) {
       return $crypt
-        if $crypt eq Crypt::Passwd::XS::crypt($pwd, $crypt)
+        if _const_t_eq( $crypt, Crypt::Passwd::XS::crypt($pwd, $crypt) )
     } else {
       return $crypt
-        if $crypt eq crypt($pwd, $crypt)
+        if _const_t_eq( $crypt, crypt($pwd, $crypt) )
     }
 
   }
@@ -185,26 +200,27 @@ App::bmkpasswd - bcrypt-capable mkpasswd(1) and exported helpers
 =head1 SYNOPSIS
 
   ## From Perl:
-  use App::bmkpasswd 'mkpasswd';
+
+  use App::bmkpasswd 'mkpasswd', 'passwdcmp';
   my $bcrypted = mkpasswd($passwd);
+  say 'matched' if passwdcmp($passwd, $bcrypted);
 
   ## From a shell:
+
   bmkpasswd --help
   
-  ## Generate bcrypted passwords
-  ## Defaults to work cost factor '08':
+  # Generate bcrypted passwords
+  # Defaults to work cost factor '08':
   bmkpasswd
   bmkpasswd --workcost='06'
 
-  ## Use other methods:
-  bmkpasswd --method='md5'
   # SHA requires Crypt::Passwd::XS or glibc2.7+
   bmkpasswd --method='sha512'
   
-  ## Compare a hash:
+  # Compare a hash:
   bmkpasswd --check=HASH
 
-  ## Check hash generation times:
+  # Check hash generation times:
   bmkpasswd --benchmark
 
 =head1 DESCRIPTION
@@ -213,8 +229,6 @@ B<App::bmkpasswd> is a simple bcrypt-enabled mkpasswd. (Helper functions
 are also exported for use in other applications; see L</EXPORTED>.)
 
 See C<bmkpasswd --help> for usage information.
-
-Uses L<Bytes::Random::Secure> to generate random salts.
 
 Uses L<Crypt::Eksblowfish::Bcrypt> for bcrypted passwords. Bcrypt hashes 
 come with a configurable work-cost factor; that allows hash generation 
@@ -227,6 +241,8 @@ on why you ought to be using bcrypt or similar "adaptive" techniques.
 B<SHA-256> and B<SHA-512> are supported if available. You'll need 
 either L<Crypt::Passwd::XS> or a system crypt() that can handle SHA, 
 such as glibc-2.7+ or newer FreeBSD builds.
+
+Uses L<Bytes::Random::Secure> to generate random salts.
 
 =head1 EXPORTED
 
@@ -247,7 +263,7 @@ other Perl modules/applications:
   $crypted = mkpasswd($passwd, 'sha256');
   $crypted = mkpasswd($passwd, 'sha512');
 
-  ## Use a strong random source (requires spare entropy):
+  ## Use a strongly-random salt (requires spare entropy):
   $crypted = mkpasswd($passwd, 'bcrypt', '08', 'strong');
   $crypted = mkpasswd($passwd, 'sha512', 0, 'strong');
 
