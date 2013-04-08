@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '1.082004';
+  $App::bmkpasswd::VERSION = '1.082005';
 }
 use strictures 1;
 use Carp;
@@ -56,14 +56,18 @@ sub have_sha {
   ## requires glibc2.7+ or Crypt::Passwd::XS
   my %tests = (
     sha256 => sub {
-      my $testcrypt = crypt('a', '$5$abc$');
-      return unless index($testcrypt, '$5$abc$') == 0;
+      my $testcrypt;
+      try { $testcrypt = crypt('a', '$5$abc$') }
+        catch { warn $_ };
+      return unless $testcrypt and index($testcrypt, '$5$abc$') == 0;
       1
     },
 
     sha512 => sub {
-      my $testcrypt = crypt('b', '$6$abc$');
-      return unless index($testcrypt, '$6$abc$') == 0;
+      my $testcrypt;
+      try { $testcrypt = crypt('b', '$6$abc$') }
+        catch { warn $_ };
+      return unless $testcrypt and index($testcrypt, '$6$abc$') == 0;
       1
     },
   );
@@ -153,9 +157,10 @@ sub mkpasswd {
 }
 
 sub _const_t_eq {
+  ## Constant time comparison is probably overrated for comparing
+  ## hashed passwords ... but hey, why not?
   my ($first, $second) = @_;
-  my $unequal;
-  my $n = 0;
+  my ($n, $unequal) = 0;
   no warnings 'substr';
   while ($n < length $first) {
     my $schr = substr($second, $n, 1);
@@ -168,23 +173,24 @@ sub _const_t_eq {
 
 sub passwdcmp {
   my ($pwd, $crypt) = @_;
-  return unless defined $pwd and $crypt;
+  croak 'Expected a password string and hash'
+    unless defined $pwd and $crypt;
+
+  carp 'Possibly passed an invalid hash'
+    unless index($crypt, '$') == 0;
 
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
     ## Looks like bcrypt.
     return $crypt if _const_t_eq( $crypt, bcrypt($pwd, $crypt) )
   } else {
-
-    if ( have_passwd_xs() ) {
+    if (have_passwd_xs) {
       return $crypt
         if _const_t_eq( $crypt, Crypt::Passwd::XS::crypt($pwd, $crypt) )
     } else {
       return $crypt
         if _const_t_eq( $crypt, crypt($pwd, $crypt) )
     }
-
   }
-
   return
 }
 

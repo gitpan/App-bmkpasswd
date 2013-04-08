@@ -9,9 +9,7 @@ SKIP: {
   unless ( App::bmkpasswd::have_sha(256) ) {
     diag("No SHA support found\n",
           "You may want to install Crypt::Passwd::XS");
-
     skip( "No SHA support", 8 );
-
   } else {
     diag("Found SHA support");
   }
