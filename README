@@ -27,8 +27,11 @@ SYNOPSIS
       bmkpasswd --benchmark
 
 DESCRIPTION
-    App::bmkpasswd is a simple bcrypt-enabled mkpasswd. (Helper functions
-    are also exported for use in other applications; see "EXPORTED".)
+    App::bmkpasswd is a simple bcrypt-enabled mkpasswd.
+
+    Helper functions are also exported for use in other applications; see
+    "EXPORTED". Crypt::Bcrypt::Easy provides an easier programmatic
+    interface.
 
     See "bmkpasswd --help" for usage information.
 
@@ -47,8 +50,10 @@ DESCRIPTION
     Uses Bytes::Random::Secure to generate random salts.
 
 EXPORTED
-    You can use the exported mkpasswd and passwdcmp functions in other Perl
-    modules/applications:
+    Crypt::Bcrypt::Easy provides an easier programmatic interface, if you're
+    only interested in generating bcrypt passwords. If you'd like to make
+    use of other password types, ou can use the exported mkpasswd and
+    passwdcmp functions:
 
       use App::bmkpasswd qw/mkpasswd passwdcmp/;
 
@@ -70,7 +75,7 @@ EXPORTED
   passwdcmp
       ## Compare a password against a hash
       ## passwdcmp() will return the hash if it is a match
-      if ( passwdcmp($passwd, $hash) ) {
+      if ( passwdcmp($plaintext, $crypted) ) {
         ## Successful match
       } else {
         ## Failed match

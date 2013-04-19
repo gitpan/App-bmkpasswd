@@ -4,7 +4,7 @@
       "Jon Portnoy <avenj@cobaltirc.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300033, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300034, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -58,6 +58,6 @@
          "web" : "https://github.com/avenj/app-bmkpasswd"
       }
    },
-   "version" : "1.082005"
+   "version" : "2.000001"
 }
 

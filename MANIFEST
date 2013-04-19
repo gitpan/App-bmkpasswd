@@ -9,10 +9,12 @@ README.mkdn
 bin/bmkpasswd
 dist.ini
 lib/App/bmkpasswd.pm
+lib/Crypt/Bcrypt/Easy.pm
 t/00-report-prereqs.t
 t/01_md5.t
 t/02_bcrypt.t
 t/03_sha.t
+t/04_oo.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
 xt/extended.t

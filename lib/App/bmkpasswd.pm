@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '1.082005';
+  $App::bmkpasswd::VERSION = '2.000001';
 }
 use strictures 1;
 use Carp;
@@ -56,18 +56,18 @@ sub have_sha {
   ## requires glibc2.7+ or Crypt::Passwd::XS
   my %tests = (
     sha256 => sub {
-      my $testcrypt;
-      try { $testcrypt = crypt('a', '$5$abc$') }
+      my $testc;
+      try { $testc = crypt('a', '$5$abc$') }
         catch { warn $_ };
-      return unless $testcrypt and index($testcrypt, '$5$abc$') == 0;
+      return unless $testc and index($testc, '$5$abc$') == 0;
       1
     },
 
     sha512 => sub {
-      my $testcrypt;
-      try { $testcrypt = crypt('b', '$6$abc$') }
+      my $testc;
+      try { $testc = crypt('b', '$6$abc$') }
         catch { warn $_ };
-      return unless $testcrypt and index($testcrypt, '$6$abc$') == 0;
+      return unless $testc and index($testc, '$6$abc$') == 0;
       1
     },
   );
@@ -183,7 +183,7 @@ sub passwdcmp {
     ## Looks like bcrypt.
     return $crypt if _const_t_eq( $crypt, bcrypt($pwd, $crypt) )
   } else {
-    if (have_passwd_xs) {
+    if (have_passwd_xs()) {
       return $crypt
         if _const_t_eq( $crypt, Crypt::Passwd::XS::crypt($pwd, $crypt) )
     } else {
@@ -231,8 +231,11 @@ App::bmkpasswd - bcrypt-capable mkpasswd(1) and exported helpers
 
 =head1 DESCRIPTION
 
-B<App::bmkpasswd> is a simple bcrypt-enabled mkpasswd. (Helper functions 
-are also exported for use in other applications; see L</EXPORTED>.)
+B<App::bmkpasswd> is a simple bcrypt-enabled mkpasswd. 
+
+Helper functions 
+are also exported for use in other applications; see L</EXPORTED>.
+L<Crypt::Bcrypt::Easy> provides an easier programmatic interface.
 
 See C<bmkpasswd --help> for usage information.
 
@@ -252,8 +255,10 @@ Uses L<Bytes::Random::Secure> to generate random salts.
 
 =head1 EXPORTED
 
-You can use the exported B<mkpasswd> and B<passwdcmp> functions in 
-other Perl modules/applications:
+L<Crypt::Bcrypt::Easy> provides an easier programmatic interface, if you're
+only interested in generating bcrypt passwords.  If you'd like to make use of
+other password types, ou can use the exported B<mkpasswd> and B<passwdcmp>
+functions:
 
   use App::bmkpasswd qw/mkpasswd passwdcmp/;
 
@@ -277,7 +282,7 @@ other Perl modules/applications:
 
   ## Compare a password against a hash
   ## passwdcmp() will return the hash if it is a match
-  if ( passwdcmp($passwd, $hash) ) {
+  if ( passwdcmp($plaintext, $crypted) ) {
     ## Successful match
   } else {
     ## Failed match
