@@ -1,10 +1,12 @@
 package Crypt::Bcrypt::Easy;
 {
-  $Crypt::Bcrypt::Easy::VERSION = '2.000001';
+  $Crypt::Bcrypt::Easy::VERSION = '2.000002';
 }
 use Carp;
 use strictures 1;
 use App::bmkpasswd 'mkpasswd', 'passwdcmp';
+
+use Scalar::Util 'blessed';
 
 use Exporter 'import';
 our @EXPORT = 'bcrypt';
@@ -18,9 +20,12 @@ sub bcrypt {  Crypt::Bcrypt::Easy->new(@_)  }
 
 sub new {
   my ($cls, %params) = @_;
+  $cls = blessed($cls) || $cls;
   my $cost = $params{cost} || '08';
   bless \$cost, $cls
 }
+
+sub cost { my ($self) = @_; $$self }
 
 sub compare {
   my ($self, %params) = @_;
@@ -29,28 +34,29 @@ sub compare {
     confess "Expected 'text =>' and 'crypt =>' params"
   }
 
-  passwdcmp($params{text}, $params{crypt})
+  passwdcmp($params{text} => $params{crypt})
 }
 
 sub crypt {
   my $self = shift;
 
-  my ($text, $cost, $strong);
+  my %params;
 
   if (@_ == 1) {
-    $text = $_[0]
+    $params{text} = $_[0]
   } elsif (@_ > 1) {
-    my %params = @_;
+    %params = @_;
     confess "Expected 'text =>' param"
       unless defined $params{text};
-    $text = $params{text};
-    $cost = $params{cost};
-    $strong = $params{strong};
   } else {
     confess "Not enough arguments; expected a password"
   }
 
-  mkpasswd( $text, 'bcrypt', ($cost || $$self), $strong )
+  mkpasswd( $params{text} => 
+    ($params{type}   || 'bcrypt'), 
+    ($params{cost}   || $self->cost), 
+    ($params{strong} || () )
+  )
 }
 
 1;
@@ -117,8 +123,12 @@ Specifying a boolean true 'strong =>' parameter enables strongly-random salts
      ...
   }
 
-Returns boolean true if hashes match.
-See C<passwdcmp> from L<App::bmkpasswd>.
+Returns boolean true if hashes match. Accepts any type of hash supported by
+your L<App::bmkpasswd>; see C<passwdcmp> from L<App::bmkpasswd>.
+
+=head3 cost
+
+Returns the current work-cost value.
 
 =head1 AUTHOR
 
