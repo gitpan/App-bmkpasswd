@@ -19,7 +19,7 @@ ok(
 undef $passwd;
 
 ok( 
-  $passwd = bcrypt->crypt( text  => 'pie', cost  => '04' ),
+  $passwd = bcrypt->crypt( text  => 'pie', cost  => 4 ),
   'tuned cost ->crypt() ok'
 );
 ok(
@@ -62,6 +62,7 @@ undef $passwd;
 undef $bc;
 
 ok( $bc = bcrypt( cost => 10 ), 'simple bcrypt constructor ok' );
+isa_ok( $bc, 'Crypt::Bcrypt::Easy' );
 ok( $bc->cost == 10, 'cost() ok' );
 
 done_testing;

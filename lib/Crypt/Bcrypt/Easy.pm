@@ -1,6 +1,6 @@
 package Crypt::Bcrypt::Easy;
 {
-  $Crypt::Bcrypt::Easy::VERSION = '2.000002';
+  $Crypt::Bcrypt::Easy::VERSION = '2.000003';
 }
 use Carp;
 use strictures 1;
@@ -34,7 +34,7 @@ sub compare {
     confess "Expected 'text =>' and 'crypt =>' params"
   }
 
-  passwdcmp($params{text} => $params{crypt})
+  passwdcmp $params{text} => $params{crypt}
 }
 
 sub crypt {
@@ -49,14 +49,13 @@ sub crypt {
     confess "Expected 'text =>' param"
       unless defined $params{text};
   } else {
-    confess "Not enough arguments; expected a password"
+    confess 'Not enough arguments; expected a password'
   }
 
-  mkpasswd( $params{text} => 
+  mkpasswd $params{text} => 
     ($params{type}   || 'bcrypt'), 
     ($params{cost}   || $self->cost), 
     ($params{strong} || () )
-  )
 }
 
 1;
@@ -65,7 +64,7 @@ sub crypt {
 
 =head1 NAME
 
-Crypt::Bcrypt::Easy - Simple bcrypted passwords
+Crypt::Bcrypt::Easy - Simple interface to bcrypted passwords
 
 =head1 SYNOPSIS
 
@@ -73,20 +72,24 @@ Crypt::Bcrypt::Easy - Simple bcrypted passwords
 
   my $plain = 'my_password';
 
-  my $passwd = bcrypt->crypt( text => $plain, cost => '08' );
+  # Same (default cost 08):
+  my $passwd = bcrypt->crypt( $plain );
+  my $passwd = bcrypt->crypt( text => $plain );
+  my $passwd = bcrypt->crypt( text => $plain, cost => 8 );
 
   if (bcrypt->compare( text => $plain, crypt => $passwd )) {
     # Successful match
   }
 
-  # Generate passwords using a different default workcost
+  # Generate passwords using a different default workcost:
   my $bcrypt  = bcrypt( cost => 10 );
   my $crypted = $bcrypt->crypt( $plain );
 
 =head1 DESCRIPTION
 
 This module provides an alternate interface to L<App::bmkpasswd>'s exported
-helpers (which were created to power L<bmkpasswd> and are a bit awkward).
+helpers (which were created to power L<bmkpasswd> and are a bit awkward to use
+directly).
 
 This POD briefly covers usage of this interface; 
 see L<App::bmkpasswd> for more details.
@@ -104,7 +107,7 @@ see L</crypt>.
 
   my $passwd = bcrypt->crypt(
     text   => 'my_password',
-    cost   => '08',
+    cost   => 8,
     strong => 0,
   );
 
@@ -119,7 +122,7 @@ Specifying a boolean true 'strong =>' parameter enables strongly-random salts
 
 =head3 compare
 
-  if (bcrypt->compare( text => 'my_password', crypt => $passwd)) {
+  if (bcrypt->compare(text => 'my_password', crypt => $passwd)) {
      ...
   }
 

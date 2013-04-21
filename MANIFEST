@@ -17,4 +17,5 @@ t/03_sha.t
 t/04_oo.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
+t/release-unused-vars.t
 xt/extended.t
