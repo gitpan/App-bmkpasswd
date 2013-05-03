@@ -27,7 +27,6 @@ my %WriteMakefileArgs = (
     "Crypt::Eksblowfish" => "0.003",
     "Exporter" => 0,
     "Getopt::Long" => "2.24",
-    "Term::ReadKey" => "2.30",
     "Time::HiRes" => 0,
     "Try::Tiny" => "0.12",
     "strictures" => 1
@@ -35,7 +34,7 @@ my %WriteMakefileArgs = (
   "TEST_REQUIRES" => {
     "Test::More" => "0.88"
   },
-  "VERSION" => "2.000003",
+  "VERSION" => "2.001000",
   "test" => {
     "TESTS" => "t/*.t"
   }

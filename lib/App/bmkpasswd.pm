@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '2.000003';
+  $App::bmkpasswd::VERSION = '2.001000';
 }
 use strictures 1;
 use Carp;
@@ -153,7 +153,7 @@ sub mkpasswd {
   return Crypt::Passwd::XS::crypt($pwd, $salt)
     if have_passwd_xs();
 
-  return crypt($pwd, $salt)
+  crypt($pwd, $salt)
 }
 
 sub _const_t_eq {
@@ -235,9 +235,8 @@ B<App::bmkpasswd> is a simple bcrypt-enabled mkpasswd.
 
 Helper functions are also exported for use in other applications; see
 L</EXPORTED>.
-
 L<Crypt::Bcrypt::Easy> provides an easier bcrypt-specific
-programmatic interface.
+programmatic interface for Perl programmers.
 
 See C<bmkpasswd --help> for usage information.
 

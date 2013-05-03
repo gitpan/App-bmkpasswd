@@ -29,7 +29,8 @@
       "runtime" : {
          "recommends" : {
             "Crypt::Passwd::XS" : "0",
-            "Math::Random::ISAAC::XS" : "0"
+            "Math::Random::ISAAC::XS" : "0",
+            "Term::ReadKey" : "2.30"
          },
          "requires" : {
             "Bytes::Random::Secure" : "0.24",
@@ -37,7 +38,6 @@
             "Crypt::Eksblowfish" : "0.003",
             "Exporter" : "0",
             "Getopt::Long" : "2.24",
-            "Term::ReadKey" : "2.30",
             "Time::HiRes" : "0",
             "Try::Tiny" : "0.12",
             "perl" : "v5.8.5",
@@ -58,6 +58,6 @@
          "web" : "https://github.com/avenj/app-bmkpasswd"
       }
    },
-   "version" : "2.000003"
+   "version" : "2.001000"
 }
 

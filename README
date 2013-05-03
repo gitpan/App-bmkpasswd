@@ -30,10 +30,8 @@ DESCRIPTION
     App::bmkpasswd is a simple bcrypt-enabled mkpasswd.
 
     Helper functions are also exported for use in other applications; see
-    "EXPORTED".
-
-    Crypt::Bcrypt::Easy provides an easier bcrypt-specific programmatic
-    interface.
+    "EXPORTED". Crypt::Bcrypt::Easy provides an easier bcrypt-specific
+    programmatic interface for Perl programmers.
 
     See "bmkpasswd --help" for usage information.
 
