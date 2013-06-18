@@ -18,7 +18,7 @@ my @modules = qw(
   ExtUtils::MakeMaker
   Getopt::Long
   Math::Random::ISAAC::XS
-  Term::ReadKey
+  POSIX
   Test::More
   Time::HiRes
   Try::Tiny
