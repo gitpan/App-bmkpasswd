@@ -14,7 +14,7 @@ my @modules = qw(
   Carp
   Crypt::Eksblowfish
   Crypt::Passwd::XS
-  Exporter
+  Exporter::Tiny
   ExtUtils::MakeMaker
   Getopt::Long
   Math::Random::ISAAC::XS

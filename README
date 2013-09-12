@@ -58,7 +58,12 @@ EXPORTED
     use of other password types, you can use the exported mkpasswd and
     passwdcmp functions:
 
-      use App::bmkpasswd qw/mkpasswd passwdcmp/;
+      use App::bmkpasswd 'mkpasswd', 'passwdcmp';
+      # Same as:
+      use App::bmkpasswd -all;
+
+    This module uses Exporter::Tiny to export functions. This provides for
+    flexible import options. See the Exporter::Tiny docs for details.
 
   mkpasswd
       ## Generate a bcrypted passwd with work-cost 08:

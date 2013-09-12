@@ -25,7 +25,7 @@ my %WriteMakefileArgs = (
     "Bytes::Random::Secure" => "0.24",
     "Carp" => 0,
     "Crypt::Eksblowfish" => "0.003",
-    "Exporter" => 0,
+    "Exporter::Tiny" => 0,
     "Getopt::Long" => "2.24",
     "POSIX" => 0,
     "Time::HiRes" => 0,
@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
   "TEST_REQUIRES" => {
     "Test::More" => "0.88"
   },
-  "VERSION" => "2.001003",
+  "VERSION" => "2.002000",
   "test" => {
     "TESTS" => "t/*.t"
   }
