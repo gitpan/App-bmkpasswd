@@ -1,6 +1,6 @@
 package Crypt::Bcrypt::Easy;
 {
-  $Crypt::Bcrypt::Easy::VERSION = '2.002000';
+  $Crypt::Bcrypt::Easy::VERSION = '2.003000';
 }
 use Carp;
 use strictures 1;

@@ -14,9 +14,11 @@ t/00-report-prereqs.t
 t/01_md5.t
 t/02_bcrypt.t
 t/03_sha.t
-t/04_oo.t
+t/04_hashopts.t
+t/05_oo.t
 t/release-cpan-changes.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
 t/release-unused-vars.t
 xt/extended.t
+xt/without_cryptxs.t

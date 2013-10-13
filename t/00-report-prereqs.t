@@ -22,7 +22,6 @@ my @modules = qw(
   Test::More
   Time::HiRes
   Try::Tiny
-  perl
   strictures
 );
 
