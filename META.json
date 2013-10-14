@@ -39,6 +39,7 @@
             "Exporter::Tiny" : "0",
             "Getopt::Long" : "2.24",
             "POSIX" : "0",
+            "Pod::Usage" : "1.51",
             "Time::HiRes" : "0",
             "Try::Tiny" : "0.12",
             "strictures" : "1"
@@ -58,6 +59,6 @@
          "web" : "https://github.com/avenj/app-bmkpasswd"
       }
    },
-   "version" : "2.003000"
+   "version" : "2.003001"
 }
 

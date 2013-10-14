@@ -28,6 +28,7 @@ my %WriteMakefileArgs = (
     "Exporter::Tiny" => 0,
     "Getopt::Long" => "2.24",
     "POSIX" => 0,
+    "Pod::Usage" => "1.51",
     "Time::HiRes" => 0,
     "Try::Tiny" => "0.12",
     "strictures" => 1
@@ -35,7 +36,7 @@ my %WriteMakefileArgs = (
   "TEST_REQUIRES" => {
     "Test::More" => "0.88"
   },
-  "VERSION" => "2.003000",
+  "VERSION" => "2.003001",
   "test" => {
     "TESTS" => "t/*.t"
   }

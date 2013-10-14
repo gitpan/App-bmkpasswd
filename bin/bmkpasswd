@@ -1,5 +1,4 @@
 #!perl
-
 use strictures 1;
 
 use POSIX ();
@@ -8,20 +7,21 @@ use App::bmkpasswd qw/ mkpasswd passwdcmp /;
 use Time::HiRes    qw/ gettimeofday tv_interval /;
 use Try::Tiny;
 
-my $type = 'bcrypt';
-my $bcost = '08';
-my $bench = 0;
-my $strong = 0;
+my $type    = 'bcrypt';
+my $bcost   = '08';
+my $bench   = 0;
+my $strong  = 0;
 my $check;
 
+use Pod::Usage;
 use Getopt::Long;
 GetOptions(
 
-  'benchmark!'    => \$bench,
-  'strong!'       => \$strong,
-  'check=s'       => \$check,
-  'method|type=s' => \$type,
-  'workcost=s'    => \$bcost,
+  'benchmark!'       => \$bench,
+  'strong!'          => \$strong,
+  'check=s'          => \$check,
+  'm|method|type=s'  => \$type,
+  'workcost=s'       => \$bcost,
   
   'version' => sub {
      require Crypt::Eksblowfish::Bcrypt;
@@ -40,35 +40,9 @@ GetOptions(
      exit 0
    },
 
-  'help' => sub {
-    print(
-      "bmkpasswd [OPTS]... [PASSWD]\n\n",
-      " -b, --benchmark\n",
-      "   Show timers. [Default: off]\n",
-      "\n",
-      " -m, --method=<TYPE>\n",
-      "   Default: -m bcrypt\n",
-      "   Types: \n",
-      "   - bcrypt (recommended)\n",
-      "   - sha256 (requires Crypt::Passwd::XS or recent libc)\n",
-      "   - sha512 (requires Crypt::Passwd::XS or recent libc)\n",
-      "\n",
-      " -c, --check=<HASH>\n",
-      "   Compare password against specified hash.\n",
-      "\n",
-      " -s, --strong\n",
-      "   Use a blocking random source to generate salts.\n",
-      "\n",
-      " bcrypt-only:\n",
-      " -w, --workcost=<two digit power of 2>\n",
-      "   Default: -w 08\n",
-      "   bcrypt work cost factor; higher is slower.\n",
-      "   When it comes to comparing passwds, slower can be better.\n",
-      "   See http://codahale.com/how-to-safely-store-a-password/\n",
-    );
-    exit 0
-  },  
-
+  'help'   => sub { pod2usage(0) },
+  'man'    => sub { pod2usage(-verbose => 2, -noperldoc => 1) },
+  'usage'  => sub { pod2usage(2) },
 );
 
 my $pwd;
@@ -122,31 +96,21 @@ __END__
 
 =head1 OPTIONS
 
- -h, --help
+ -m, --method=TYPE  [default: bcrypt]
+     Types:  bcrypt  (recommended; guaranteed available)
+             sha512  (requires recent libc or Crypt::Passwd::XS)
+             sha256  (requires recent libc or Crypt::Passwd::XS)
 
- -m, --method <TYPE>
-     crypt method.
-     Types:
-       bcrypt  (default; requires Crypt::Eksblowfish)
-       sha512  (requires recent libc or Crypt::Passwd::XS)
-       sha256  (requires recent libc or Crypt::Passwd::XS)
+ -c, --check=HASH   Compare password against given HASH
 
- -c, --check <HASH>
-     Check password against <HASH>.
-     Method will be auto-detected.
+ -s, --strong       Use strongly-random salt generation
 
- -s, --strong
-     Use a blocking random source like /dev/random
-     to generate salts.
+ -w, --workcost=NUM Bcrypt work-cost factor; default 08.
+                    Higher is slower. Should be a two-digit power of 2.
 
- -w, --workcost <COST>
-     bcrypt-only.
-     Specify a work cost factor. Higher is slower.
-     Must be a two-digit power of 2.
-     Pad with zeros as necessary.
+ -b, --benchmark    Show timers; useful for comparing hash generation
 
- -b, --benchmark
-     Show timers; useful for comparing hash generation times.
+If PASSWD is missing, it is prompted for interactively.
 
 =head1 DESCRIPTION
 

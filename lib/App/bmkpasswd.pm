@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '2.003000';
+  $App::bmkpasswd::VERSION = '2.003001';
 }
 use strictures 1;
 use Carp;

@@ -19,6 +19,7 @@ my @modules = qw(
   Getopt::Long
   Math::Random::ISAAC::XS
   POSIX
+  Pod::Usage
   Test::More
   Time::HiRes
   Try::Tiny
