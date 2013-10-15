@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '2.003001';
+  $App::bmkpasswd::VERSION = '2.004000';
 }
 use strictures 1;
 use Carp;
@@ -15,6 +15,8 @@ use parent 'Exporter::Tiny';
 our @EXPORT_OK = qw/
   mkpasswd
   passwdcmp
+
+  mkpasswd_available
 /;
 
 use Bytes::Random::Secure;
@@ -34,6 +36,7 @@ my $getbrs = sub {
     NonBlocking => 1,
   )
 };
+
 
 my %_can_haz;
 sub have_passwd_xs {
@@ -57,17 +60,13 @@ sub have_sha {
   ## (need a recent libc or Crypt::Passwd::XS)
   my %tests = (
     sha256 => sub {
-      my $testc;
-      try { $testc = crypt('a', '$5$abc$') }
-        catch { warn $_ };
+      my $testc = try { crypt('a', '$5$abc$') } catch { warn $_; () };
       return unless $testc and index($testc, '$5$abc$') == 0;
       1
     },
 
     sha512 => sub {
-      my $testc;
-      try { $testc = crypt('b', '$6$abc$') }
-        catch { warn $_ };
+      my $testc = try { crypt('b', '$6$abc$') } catch { warn $_; () };
       return unless $testc and index($testc, '$6$abc$') == 0;
       1
     },
@@ -77,7 +76,35 @@ sub have_sha {
     return $_can_haz{$type} = 1
   }
 
-  $_can_haz{$type} = 0;
+  return $_can_haz{$type} = 0
+}
+
+sub have_md5 {
+  return 1 if have_passwd_xs();
+  return $_can_haz{md5} if defined $_can_haz{md5};
+  my $testc = try { crypt('a', '$1$abcd$') } catch { warn $_; () };
+  if ($testc && index $testc, '$1$abcd$' == 0) {
+    return $_can_haz{md5} = 1
+  }
+  return $_can_haz{md5} = 0
+}
+
+
+sub mkpasswd_available {
+  my ($type) = @_;
+
+  unless ($type) {
+    return (
+      'bcrypt',
+      ( have_sha(256) ? 'sha256' : () ),
+      ( have_sha(512) ? 'sha512' : () ),
+      ( have_md5()    ? 'md5'    : () ),
+    );
+  }
+
+  return 1 if lc($type) eq 'bcrypt';
+  return have_sha($1) if $type =~ /^sha-?(\d{3})$/i;
+  return have_md5()   if lc($type) eq 'md5';
   return
 }
 
@@ -140,28 +167,30 @@ sub mkpasswd {
         unless $cost =~ /^[0-9]+$/;
       $cost = "0$cost" if length $cost == 1;
 
-      $salt = $saltgen->('bcrypt', $opts{strong});
+      $salt = $saltgen->(bcrypt => $opts{strong});
       my $bsettings = join '', '$2a$', $cost, '$', $salt;
 
       return bcrypt($pwd, $bsettings)
     }
 
-    if ($type =~ /sha-?512/i) {
+    if ($type =~ /^sha-?512$/i) {
       croak 'SHA hash requested but no SHA support available' 
         unless have_sha(512);
-      $salt = join '', '$6$', $saltgen->('sha', $opts{strong}), '$';
+      $salt = join '', '$6$', $saltgen->(sha => $opts{strong}), '$';
       last TYPE
     }
 
-    if ($type =~ /sha(-?256)?/i) {
+    if ($type =~ /^sha(-?256)?$/i) {
       croak 'SHA hash requested but no SHA support available' 
         unless have_sha(256);
-      $salt = join '', '$5$', $saltgen->('sha', $opts{strong}), '$';
+      $salt = join '', '$5$', $saltgen->(sha => $opts{strong}), '$';
       last TYPE
     }
 
     if ($type =~ /^md5$/i) {
-      $salt = join '', '$1$', $saltgen->('md5', $opts{strong}), '$';
+      croak 'MD5 hash requested but no MD5 support available'
+        unless have_md5;
+      $salt = join '', '$1$', $saltgen->(md5 => $opts{strong}), '$';
       last TYPE
     }
 
@@ -192,8 +221,7 @@ sub passwdcmp {
   croak 'Expected a password string and hash'
     unless defined $pwd and $crypt;
 
-  carp 'Possibly passed an invalid hash'
-    unless index($crypt, '$') == 0;
+  carp 'Possibly passed an invalid hash' unless index($crypt, '$') == 0;
 
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
     ## Looks like bcrypt.
@@ -282,7 +310,6 @@ other password types, you can use the exported B<mkpasswd> and B<passwdcmp>
 functions:
 
   use App::bmkpasswd 'mkpasswd', 'passwdcmp';
-  # Same as:
   use App::bmkpasswd -all;
 
 This module uses L<Exporter::Tiny> to export functions. This provides for
@@ -300,6 +327,17 @@ Compare a password against a hash.
 
 B<passwdcmp> will return the hash if it is a match; otherwise, an empty list
 is returned.
+
+=head2 mkpasswd_available
+
+  my @available = mkpasswd_available;
+
+  if ( mkpasswd_available('sha512') ) { ... }
+
+Given no arguments, returns the list of available hash types.
+
+Given a type (see L</mkpasswd>), returns boolean true if the method is available. ('bcrypt' is
+always available.)
 
 =head2 mkpasswd
 
@@ -327,7 +365,7 @@ A different work-cost can be specified for bcrypt passwds:
 
   $bcrypted = mkpasswd($passwd, 'bcrypt', '10');
 
-SHA is supported, in which case the work-cost value is ignored:
+SHA-256 and SHA-512 are supported, in which case the work-cost value is ignored:
 
   $crypted = mkpasswd($passwd, 'sha256');
   $crypted = mkpasswd($passwd, 'sha512');
@@ -370,6 +408,6 @@ should be fine.)
 
 Jon Portnoy <avenj@cobaltirc.org>
 
-=for Pod::Coverage have_(?i:[A-Z_]+)
+=for Pod::Coverage have_(?i:[a-z0-9_]+)
 
 =cut
