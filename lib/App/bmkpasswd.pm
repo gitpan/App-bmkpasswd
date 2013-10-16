@@ -1,6 +1,6 @@
 package App::bmkpasswd;
 {
-  $App::bmkpasswd::VERSION = '2.004000';
+  $App::bmkpasswd::VERSION = '2.004001';
 }
 use strictures 1;
 use Carp;
@@ -61,21 +61,18 @@ sub have_sha {
   my %tests = (
     sha256 => sub {
       my $testc = try { crypt('a', '$5$abc$') } catch { warn $_; () };
-      return unless $testc and index($testc, '$5$abc$') == 0;
-      1
+      $testc && index($testc, '$5$abc$') == 0 ? 1 : ()
     },
 
     sha512 => sub {
       my $testc = try { crypt('b', '$6$abc$') } catch { warn $_; () };
-      return unless $testc and index($testc, '$6$abc$') == 0;
-      1
+      $testc && index($testc, '$6$abc$') == 0 ? 1 : ()
     },
   );
 
   if (defined $tests{$type} && $tests{$type}->()) {
     return $_can_haz{$type} = 1
   }
-
   return $_can_haz{$type} = 0
 }
 
@@ -83,7 +80,7 @@ sub have_md5 {
   return 1 if have_passwd_xs();
   return $_can_haz{md5} if defined $_can_haz{md5};
   my $testc = try { crypt('a', '$1$abcd$') } catch { warn $_; () };
-  if ($testc && index $testc, '$1$abcd$' == 0) {
+  if ($testc && index($testc, '$1$abcd$') == 0) {
     return $_can_haz{md5} = 1
   }
   return $_can_haz{md5} = 0
@@ -102,9 +99,10 @@ sub mkpasswd_available {
     );
   }
 
-  return 1 if lc($type) eq 'bcrypt';
-  return have_sha($1) if $type =~ /^sha-?(\d{3})$/i;
-  return have_md5()   if lc($type) eq 'md5';
+  $type = lc $type;
+  return 1            if $type eq 'bcrypt';
+  return have_sha($1) if $type =~ /^sha-?(\d{3})$/;
+  return have_md5()   if $type eq 'md5';
   return
 }
 
@@ -309,7 +307,9 @@ only interested in generating bcrypt passwords.  If you'd like to make use of
 other password types, you can use the exported B<mkpasswd> and B<passwdcmp>
 functions:
 
+  # Import selectively:
   use App::bmkpasswd 'mkpasswd', 'passwdcmp';
+  # Or import all functions:
   use App::bmkpasswd -all;
 
 This module uses L<Exporter::Tiny> to export functions. This provides for

@@ -58,7 +58,9 @@ EXPORTED
     use of other password types, you can use the exported mkpasswd and
     passwdcmp functions:
 
+      # Import selectively:
       use App::bmkpasswd 'mkpasswd', 'passwdcmp';
+      # Or import all functions:
       use App::bmkpasswd -all;
 
     This module uses Exporter::Tiny to export functions. This provides for
