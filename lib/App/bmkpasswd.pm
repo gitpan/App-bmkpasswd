@@ -1,7 +1,5 @@
 package App::bmkpasswd;
-{
-  $App::bmkpasswd::VERSION = '2.004001';
-}
+$App::bmkpasswd::VERSION = '2.004002';
 use strictures 1;
 use Carp;
 use Try::Tiny;
@@ -21,21 +19,12 @@ our @EXPORT_OK = qw/
 
 use Bytes::Random::Secure;
 my ($brs, $brsnb);
-my $getbrs = sub {
+sub get_brs {
   my (%params) = @_;
-
-  if ($params{strong}) {
-    return 
-      $brs ||= Bytes::Random::Secure->new(
-        Bits => 128,
-      )
-  }
-
-  $brsnb ||= Bytes::Random::Secure->new(
-    Bits        => 128,
-    NonBlocking => 1,
-  )
-};
+  $params{strong} ?
+    $brs ||= Bytes::Random::Secure->new(Bits => 128)
+    : $brsnb ||= Bytes::Random::Secure->new(Bits => 128, NonBlocking => 1)
+}
 
 
 my %_can_haz;
@@ -106,11 +95,10 @@ sub mkpasswd_available {
   return
 }
 
-
-sub _saltgen {
+my $_saltgen = sub {
   my ($type, $strong) = @_;
 
-  my $rnd = $getbrs->(strong => $strong);
+  my $rnd = get_brs(strong => $strong);
 
   SALT: {
     if ($type eq 'bcrypt') {
@@ -131,7 +119,7 @@ sub _saltgen {
   }
 
   confess "_saltgen fell through, unknown type $type"
-}
+};
 
 sub mkpasswd {
   # mkpasswd $passwd => $type, $cost, $strongsalt;
@@ -154,7 +142,7 @@ sub mkpasswd {
 
   my $type = defined $opts{type} ? $opts{type} : 'bcrypt';
 
-  my $saltgen = $opts{saltgen} || \&_saltgen;
+  my $saltgen = $opts{saltgen} || $_saltgen;
   my $salt;
 
   TYPE: {
@@ -219,13 +207,18 @@ sub passwdcmp {
   croak 'Expected a password string and hash'
     unless defined $pwd and $crypt;
 
-  carp 'Possibly passed an invalid hash' unless index($crypt, '$') == 0;
+  my $pos_a = index $crypt, '$';
+  my $pos_b = index $crypt, '$', 2;
+  carp 'Possibly passed an invalid hash' 
+    unless $pos_a == 0
+    and    $pos_b == 2
+    or     $pos_b == 3;
 
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
     ## Looks like bcrypt.
     return $crypt if _const_t_eq( $crypt, bcrypt($pwd, $crypt) )
   } else {
-    if (have_passwd_xs()) {
+    if (have_passwd_xs) {
       return $crypt
         if _const_t_eq( $crypt, Crypt::Passwd::XS::crypt($pwd, $crypt) )
     } else {
@@ -408,6 +401,6 @@ should be fine.)
 
 Jon Portnoy <avenj@cobaltirc.org>
 
-=for Pod::Coverage have_(?i:[a-z0-9_]+)
+=for Pod::Coverage have_\w+ get_\w+
 
 =cut
