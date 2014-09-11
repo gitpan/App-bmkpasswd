@@ -1,5 +1,5 @@
 package Crypt::Bcrypt::Easy;
-$Crypt::Bcrypt::Easy::VERSION = '2.004002';
+$Crypt::Bcrypt::Easy::VERSION = '2.005001';
 use Carp;
 use strictures 1;
 use App::bmkpasswd 'mkpasswd', 'passwdcmp';
