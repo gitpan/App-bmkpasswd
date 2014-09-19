@@ -1,5 +1,5 @@
 package Crypt::Bcrypt::Easy;
-$Crypt::Bcrypt::Easy::VERSION = '2.005001';
+$Crypt::Bcrypt::Easy::VERSION = '2.005002';
 use Carp;
 use strictures 1;
 use App::bmkpasswd 'mkpasswd', 'passwdcmp';
@@ -18,9 +18,8 @@ sub bcrypt {  Crypt::Bcrypt::Easy->new(@_)  }
 
 sub new {
   my ($cls, %params) = @_;
-  $cls = blessed($cls) || $cls;
   my $cost = $params{cost} || '08';
-  bless \$cost, $cls
+  bless \$cost, blessed($cls) || $cls
 }
 
 sub cost { ${ $_[0] } }
@@ -68,12 +67,14 @@ Crypt::Bcrypt::Easy - Simple interface to bcrypted passwords
 
   use Crypt::Bcrypt::Easy;
 
+  # Generate bcrypted passwords:
   my $plain = 'my_password';
-
   my $passwd = bcrypt->crypt( $plain );
-  my $passwd = bcrypt->crypt( text => $plain );
+
+  # Generate passwords with non-default options:
   my $passwd = bcrypt->crypt( text => $plain, cost => 8 );
 
+  # Compare passwords:
   if (bcrypt->compare( text => $plain, crypt => $passwd )) {
     # Successful match
   }
@@ -84,13 +85,13 @@ Crypt::Bcrypt::Easy - Simple interface to bcrypted passwords
 
 =head1 DESCRIPTION
 
-This module provides an alternate interface to L<App::bmkpasswd>'s exported
-helpers (which were created to power L<bmkpasswd> and are a bit awkward to use
-directly).
+This module provides an easy interface to creating and comparing bcrypt-hashed
+passwords via L<App::bmkpasswd>'s exported helpers (which were created to
+power L<bmkpasswd> and are a bit awkward to use directly).
 
-This POD briefly covers usage of this interface; 
-see L<App::bmkpasswd> for more details on internals and documentation
-regarding the more flexible functional interface.
+This POD briefly covers usage of this interface; see L<App::bmkpasswd> for
+more details on bcrypt, internals, and documentation regarding the more
+flexible functional interface.
 
 This module uses L<Exporter::Tiny>; you can rename the L</bcrypt> function
 as-needed:
@@ -106,19 +107,22 @@ Creates and returns a new Crypt::Bcrypt::Easy object.
 The default workcost is '08'. This can be also be tuned for individual runs;
 see L</crypt>.
 
+(This is merely a convenience function for calling C<<
+Crypt::Bcrypt::Easy->new >>.)
+
 =head3 crypt
 
-  my $crypted = bcrypt->crypt(
-    text   => 'my_password',
-    cost   => 8,
-    strong => 0,
-  );
-
-Or use defaults:
+Create and return a new password hash:
 
   my $crypted = bcrypt->crypt( 'my_password' );
 
-Create and return a new password hash.
+Override default options (see L<App::bmkpasswd>):
+
+  my $crypted = bcrypt->crypt(
+    text   => 'my_password',
+    cost   => 10,
+    strong => 1,
+  );
 
 Specifying a boolean true 'strong =>' parameter enables strongly-random salts
 (see L<App::bmkpasswd>).
@@ -130,11 +134,11 @@ Specifying a boolean true 'strong =>' parameter enables strongly-random salts
   }
 
 Returns boolean true if hashes match. Accepts any type of hash supported by
-your L<App::bmkpasswd>; see C<passwdcmp> from L<App::bmkpasswd>.
+L<App::bmkpasswd> and your system; see L<App::bmkpasswd/passwdcmp>.
 
 =head3 cost
 
-Returns the current work-cost value.
+Returns the current work-cost value; see L<App::bmkpasswd>.
 
 =head1 AUTHOR
 

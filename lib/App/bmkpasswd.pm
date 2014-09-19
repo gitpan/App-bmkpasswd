@@ -1,5 +1,5 @@
 package App::bmkpasswd;
-$App::bmkpasswd::VERSION = '2.005001';
+$App::bmkpasswd::VERSION = '2.005002';
 use strictures 1;
 use Carp;
 use Try::Tiny;
@@ -36,30 +36,26 @@ sub have_passwd_xs {
   $_can_haz{passwdxs}
 }
 
+my %_shatests = (
+  sha256 => sub {
+    my $testc = try { crypt('a', '$5$abc$') } catch { warn $_; () };
+    $testc && index($testc, '$5$abc$') == 0 ? 1 : ()
+  },
+  sha512 => sub {
+    my $testc = try { crypt('b', '$6$abc$') } catch { warn $_; () };
+    $testc && index($testc, '$6$abc$') == 0 ? 1 : ()
+  },
+);
+
 sub have_sha {
-  ## if we have Crypt::Passwd::XS, just use that:
+  # if we have Crypt::Passwd::XS, just use that:
   return 1 if have_passwd_xs();
 
-  my ($rate) = @_;
-  $rate = 512 unless $rate;
+  # else determine (the slow way) if SHA256/512 are available via libc:
+  my $rate = $_[0] || 512;
   my $type = "sha$rate";
   return $_can_haz{$type} if defined $_can_haz{$type};
-
-  ## determine (the slow way) if SHA256/512 are available
-  ## (need a recent libc or Crypt::Passwd::XS)
-  my %tests = (
-    sha256 => sub {
-      my $testc = try { crypt('a', '$5$abc$') } catch { warn $_; () };
-      $testc && index($testc, '$5$abc$') == 0 ? 1 : ()
-    },
-
-    sha512 => sub {
-      my $testc = try { crypt('b', '$6$abc$') } catch { warn $_; () };
-      $testc && index($testc, '$6$abc$') == 0 ? 1 : ()
-    },
-  );
-
-  if (defined $tests{$type} && $tests{$type}->()) {
+  if (exists $_shatests{$type} && $_shatests{$type}->()) {
     return $_can_haz{$type} = 1
   }
   return $_can_haz{$type} = 0
@@ -100,22 +96,20 @@ my $_saltgen = sub {
 
   my $rnd = get_brs(strong => $strong);
 
-  SALT: {
-    if ($type eq 'bcrypt') {
-      return en_base64( $rnd->bytes(16) );
-    }
+  if ($type eq 'bcrypt') {
+    return en_base64( $rnd->bytes(16) );
+  }
 
-    if ($type eq 'sha') {
-      my $max = en_base64( $rnd->bytes(16) );
-      my $initial = substr $max, 0, 8, '';
-      ## Drepper recommends random-length salts:
-      $initial .= substr $max, 0, 1, '' for  1 .. rand 8;
-      return $initial
-    }
+  if ($type eq 'sha') {
+    my $max = en_base64( $rnd->bytes(16) );
+    my $initial = substr $max, 0, 8, '';
+    # Drepper recommends random-length salts:
+    $initial .= substr $max, 0, 1, '' for  1 .. rand 8;
+    return $initial
+  }
 
-    if ($type eq 'md5') {
-      return en_base64( $rnd->bytes(6) );
-    }
+  if ($type eq 'md5') {
+    return en_base64( $rnd->bytes(6) );
   }
 
   confess "_saltgen fell through, unknown type $type"
@@ -188,19 +182,18 @@ sub mkpasswd {
 }
 
 sub _const_t_eq {
-  ## Constant time comparison is probably overrated for comparing
-  ## hashed passwords ... but hey, why not?
-  my ($first, $second) = @_;
-  return unless length $first == length $second;
+  # Constant time comparison is probably overrated for comparing
+  # hashed passwords ... but hey, why not?
+  my ($input, $created) = @_;
   my ($n, $unequal) = 0;
   no warnings 'substr';
-  while ($n <= length $first) {
-    my $schr = substr($second, $n, 1);
+  while ($n <= length $created) {
+    my $schr = substr($input, $n, 1);
     ++$unequal
-      if substr($first, $n, 1) ne (defined $schr ? $schr : '');
+      if substr($created, $n, 1) ne (defined $schr ? $schr : '');
     ++$n;
   }
-  $unequal ? () : 1
+  ! $unequal
 }
 
 sub passwdcmp {
@@ -216,7 +209,7 @@ sub passwdcmp {
     or     $pos_b == 3;
 
   if ($crypt =~ /^\$2a\$\d{2}\$/) {
-    ## Looks like bcrypt.
+    # Looks like bcrypt.
     return $crypt if _const_t_eq( $crypt, bcrypt($pwd, $crypt) )
   } else {
     if (have_passwd_xs) {

@@ -24,5 +24,4 @@ t/release-cpan-changes.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
 t/release-unused-vars.t
-xt/extended.t
 xt/without_cryptxs.t

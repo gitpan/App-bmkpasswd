@@ -1,11 +1,19 @@
 Revision history for Perl module App::bmkpasswd
 
+2.005002 2014-09-18
+
+  - Better Crypt::Bcrypt::Easy documentation.
+
+  - Improvements to constant time comparison.
+
+  - Minor optimizations & cleanups.
+
 2.005001 2014-09-11
 
   - SECURITY; passwdcmp() constant time comparison fixes.
     
     The last character of a hash can be skipped during constant time
-    comparison in previous versions (starting at 1.83).
+    comparison in previous versions (starting at 1.82.4).
     
     Real-world risk is reasonably low, but this does make collisions more
     likely. Mea culpa.
