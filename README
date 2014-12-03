@@ -51,9 +51,6 @@ DESCRIPTION
     Uses Bytes::Random::Secure to generate random salts. Strongly-random
     salts can also be enabled; see "mkpasswd".
 
-    For added security in public-facing applications, constant time
-    comparison is used when comparing hashes.
-
 EXPORTED
     Crypt::Bcrypt::Easy provides an easier programmatic interface, if you're
     only interested in generating bcrypt passwords. If you'd like to make
@@ -79,8 +76,6 @@ EXPORTED
 
     passwdcmp will return the hash if it is a match; otherwise, an empty
     list is returned.
-
-    Uses constant time comparison to help mitigate against timing attacks.
 
   mkpasswd_available
       my @available = mkpasswd_available;
